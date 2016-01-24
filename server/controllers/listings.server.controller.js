@@ -15,10 +15,10 @@ var mongoose = require('mongoose'),
 /* Create a listing */
 exports.create = function(req, res) {
 
-  /* Instantiate a Listing */
+  // Instantiate Listing
   var listing = new Listing(req.body);
 
-  /* save the coordinates (located in req.results if there is an address property) */
+  // Save the coordinates (located in req.results if there is an address property)
   if(req.results) {
     listing.coordinates = {
       latitude: req.results.lat, 
@@ -26,7 +26,7 @@ exports.create = function(req, res) {
     };
   }
 
-  /* Then save the listing */
+  // Save the listing
   listing.save(function(err) {
     if(err) {
       console.log(err);
@@ -37,31 +37,62 @@ exports.create = function(req, res) {
   });
 };
 
-/* Show the current listing */
+// Show the current listing
 exports.read = function(req, res) {
-  /* send back the listing as json from the request */
+  // send back the listing as json from the request
   res.json(req.listing);
 };
 
-/* Update a listing */
+// Update a listing
 exports.update = function(req, res) {
   var listing = req.listing;
 
-  /* Replace the article's properties with the new properties found in req.body */
-  /* save the coordinates (located in req.results if there is an address property) */
-  /* Save the article */
+  // Replace the article's properties with the new properties found in req.body
+  listing.code = req.body.code;
+	listing.name = req.body.name;
+  listing.address = req.body.address;
+
+  // Save the coordinates (located in req.results if there is an address property)
+  if(req.results) {
+    listing.coordinates = {
+      latitude: req.results.lat, 
+      longitude: req.results.lng
+    };
+  }
+
+  // Save the article
+  listing.save(function(err) {
+    if(err) {
+      console.log(err);
+      res.status(400).send(err);
+    } 
+		else {
+      res.json(listing);
+    }
+  });
 };
 
-/* Delete a listing */
+// Delete a listing
 exports.delete = function(req, res) {
   var listing = req.listing;
 
-  /* Remove the article */
+  // Remove the article
+  listing.remove(function(err) {
+    if(err)
+      res.status(400).send(err);
+    else
+      res.end();
+  });
 };
 
-/* Retreive all the directory listings, sorted alphabetically by listing code */
+// Retrieve all the directory listings, sorted alphabetically by listing code
 exports.list = function(req, res) {
-  /* Your code here */
+  Listing.find().sort('code').exec(function(err, listings) {
+    if(err)
+      res.status(400).send(err);
+    else
+      res.json(listings);
+  });
 };
 
 /* 
@@ -73,9 +104,9 @@ exports.list = function(req, res) {
  */
 exports.listingByID = function(req, res, next, id) {
   Listing.findById(id).exec(function(err, listing) {
-    if(err) {
+    if(err)
       res.status(400).send(err);
-    } else {
+    else {
       req.listing = listing;
       next();
     }
